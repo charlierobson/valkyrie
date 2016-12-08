@@ -29,26 +29,14 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.textBoxURL = new System.Windows.Forms.TextBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
-            // textBoxURL
-            // 
-            this.textBoxURL.AcceptsReturn = true;
-            this.textBoxURL.AllowDrop = true;
-            this.textBoxURL.Location = new System.Drawing.Point(12, 295);
-            this.textBoxURL.Name = "textBoxURL";
-            this.textBoxURL.Size = new System.Drawing.Size(283, 20);
-            this.textBoxURL.TabIndex = 0;
-            this.textBoxURL.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
-            this.textBoxURL.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
-            this.textBoxURL.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textBoxURL_KeyUp);
-            // 
             // listBox1
             // 
+            this.listBox1.AllowDrop = true;
             this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -59,6 +47,9 @@
             this.listBox1.Size = new System.Drawing.Size(199, 303);
             this.listBox1.TabIndex = 2;
             this.listBox1.ValueMember = "DisplayString";
+            this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
+            this.listBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
+            this.listBox1.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
             // 
             // pictureBox1
             // 
@@ -66,10 +57,12 @@
             this.pictureBox1.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.InitialImage")));
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(283, 274);
+            this.pictureBox1.Size = new System.Drawing.Size(283, 303);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
+            this.pictureBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
             // 
             // Form1
             // 
@@ -79,19 +72,18 @@
             this.ClientSize = new System.Drawing.Size(513, 327);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.listBox1);
-            this.Controls.Add(this.textBoxURL);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(529, 366);
             this.Name = "Form1";
             this.Text = "Valkyrie";
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox textBoxURL;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.PictureBox pictureBox1;
     }

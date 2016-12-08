@@ -16,56 +16,85 @@ namespace valkyrie
             InitializeComponent();
         }
 
-        private async Task DownloadVideoById(string youTubeVideoID)
+        private async Task<string> DownloadVideoById(string youTubeVideoID)
         {
-            Invoke((MethodInvoker)delegate { listBox1.Items.Add(youTubeVideoID); });
-            await Task.Run(() =>
+            var destName = string.Empty;
+
+            try
             {
-                try
+                var videoID = $"https://youtube.com/watch?v={youTubeVideoID}";
+                var video = await GetVideoAsync(videoID);
+
+                var tempName =
+                    Path.Combine(
+                        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                            "Downloads"), video.FullName).ToLowerInvariant();
+
+                destName = Path.ChangeExtension(tempName.Replace(" - youtube", string.Empty), "mp3");
+
+                if (File.Exists(destName)) return destName;
+
+                await WriteBytesAsync(tempName, video);
+
+                var result = await RunProcessAsync("ffmpeg.exe", $"-i \"{tempName}\" -y -q:a 0 -map a \"{destName}\"");
+                if (result)
                 {
-                    var videoID = "https://youtube.com/watch?v=" + youTubeVideoID;
-
-                    using (var service = Client.For(YouTube.Default))
-                    {
-                        var video = service.GetVideo(videoID);
-
-                        var targetName =
-                             Path.Combine(
-                                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                                    "Downloads"), video.FullName).ToLowerInvariant();
-
-                        var destName = Path.ChangeExtension(targetName.Replace(" - youtube", string.Empty), "mp3");
-
-                        if (File.Exists(destName)) return;
-
-                        File.WriteAllBytes(targetName, video.GetBytes());
-
-                        var tool = new Process
-                        {
-                            StartInfo =
-                            {
-                                FileName = "ffmpeg.exe",
-                                Arguments = $"-i \"{targetName}\" -y -q:a 0 -map a \"{destName}\"",
-                                UseShellExecute = false,
-                                RedirectStandardOutput = true,
-                                CreateNoWindow = true
-                            }
-                        };
-
-                        tool.Start();
-                        tool.WaitForExit();
-                        if (tool.ExitCode == 0)
-                        {
-                            File.Delete(targetName);
-                        }
-                    }
+                    File.Delete(tempName);
+                    return destName;
                 }
-                catch
+            }
+            catch
+            {
+                /**/
+            }
+            return $"Failed '{destName}'";
+        }
+
+        private static Task WriteBytesAsync(string destName, YouTubeVideo video)
+        {
+            return Task.Run(() =>
+            {
+                File.WriteAllBytes(destName, video.GetBytes());
+            });
+        }
+
+        private static Task<YouTubeVideo> GetVideoAsync(string videoID)
+        {
+            return Task.Run(() =>
+            {
+                using (var service = Client.For(YouTube.Default))
                 {
-                    /**/
+                    return service.GetVideo(videoID);
                 }
             });
-            Invoke((MethodInvoker)delegate { listBox1.Items.RemoveAt(0); });
+        }
+
+        private Task<bool> RunProcessAsync(string fileName, string arguments)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+
+            var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            process.Exited += (sender, args) =>
+            {
+                tcs.SetResult(process.ExitCode == 0);
+                process.Dispose();
+            };
+
+            process.Start();
+
+            return tcs.Task;
         }
 
         private void QueueUpIdFromHtml(string htmlFilename)
@@ -94,7 +123,9 @@ namespace valkyrie
             if (match.Groups.Count <= 4) return;
 
             var id = match.Groups[5].ToString();
-            await DownloadVideoById(id);
+            listBox1.Items.Add($"Downloading {id}");
+            var result = await DownloadVideoById(id);
+            listBox1.Items.Add(result);
         }
 
         private void OnDragEnter(object sender, DragEventArgs e)
@@ -125,17 +156,13 @@ namespace valkyrie
             }
         }
 
-        private void textBoxURL_KeyUp(object sender, KeyEventArgs e)
+        private void listBox1_DoubleClick(object sender, EventArgs e)
         {
-            if (e.KeyCode != Keys.Enter) return;
-
-            var item = textBoxURL.Text.Trim();
-
-            textBoxURL.Text = string.Empty;
-
-            QueueUpIdFromUrl(item);
-
-            e.Handled = true;
+            if (listBox1.SelectedItem != null)
+            {
+                var item = listBox1.SelectedItem.ToString();
+                Process.Start("explorer.exe", $"/select,\"{item}\"");
+            }
         }
     }
 }
