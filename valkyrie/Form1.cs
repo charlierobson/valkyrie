@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -27,10 +28,22 @@ namespace valkyrie
 
             _workers = new Thread[4];
 
-            for (var i = 0; i < 4; ++i)
+            for (var i = 0; i < _workers.Length; ++i)
             {
                 _workers[i] = new Thread(Converter);
                 _workers[i].Start();
+            }
+
+            ShowQueueCount();
+            ShowBusyThreadCount();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _workerQuit.Set();
+            foreach (var worker in _workers)
+            {
+                worker.Join();
             }
         }
 
@@ -47,18 +60,30 @@ namespace valkyrie
                     id = _videoQueue[0];
                     _videoQueue.RemoveAt(0);
 
-                    Invoke((MethodInvoker)delegate { toolStripStatusLabel1.Text = _videoQueue.Count.ToString(); });
+                    ShowQueueCount();
                 }
 
                 ++_busyThreads;
-                Invoke((MethodInvoker)delegate { toolStripStatusLabel2.Text = _busyThreads.ToString(); });
+                ShowBusyThreadCount();
 
                 var fileName = DoConversion(id);
                 Invoke((MethodInvoker)delegate { listBox1.Items.Add(fileName); });
 
                 --_busyThreads;
-                Invoke((MethodInvoker)delegate { toolStripStatusLabel2.Text = _busyThreads.ToString(); });
+                ShowBusyThreadCount();
             }
+        }
+
+        private void ShowBusyThreadCount()
+        {
+            if (InvokeRequired) Invoke((MethodInvoker)ShowBusyThreadCount);
+            else toolStripStatusLabel2.Text = $@"Active conversions: {_busyThreads}";
+        }
+
+        private void ShowQueueCount()
+        {
+            if (InvokeRequired) Invoke((MethodInvoker) ShowQueueCount);
+            else toolStripStatusLabel1.Text = $@"Files in queue: {_videoQueue.Count}";
         }
 
         private string DoConversion(string youTubeVideoID)
@@ -128,7 +153,7 @@ namespace valkyrie
                     _videoQueue.Add(id);
                 }
             }
-            Invoke((MethodInvoker)delegate { toolStripStatusLabel1.Text = _videoQueue.Count.ToString(); });
+            ShowQueueCount();
         }
 
         private void QueueUpIdFromWatchUrl(string item)
@@ -142,7 +167,7 @@ namespace valkyrie
             {
                 _videoQueue.Add(id);
             }
-            Invoke((MethodInvoker)delegate { toolStripStatusLabel1.Text = _videoQueue.Count.ToString(); });
+            ShowQueueCount();
         }
 
         private void OnDragEnter(object sender, DragEventArgs e)
@@ -171,6 +196,11 @@ namespace valkyrie
                     QueueUpIdsFromHtmlPlaylist(filename);
                 }
             }
+        }
+
+        private void listBox1_DoubleClick(object sender, EventArgs e)
+        {
+            Process.Start("explorer.exe", $"/select,\"{listBox1.SelectedItem.ToString()}\"");
         }
     }
 }

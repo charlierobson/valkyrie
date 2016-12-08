@@ -50,6 +50,7 @@
             this.listBox1.ValueMember = "DisplayString";
             this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
             this.listBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
+            this.listBox1.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
             // 
             // statusStrip1
             // 
